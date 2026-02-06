@@ -22,6 +22,8 @@ export default function ResultsPage() {
   const [currentFilters, setCurrentFilters] = useState<{
     budget: [number, number]
     duration: number
+    interests: string[]
+    country?: string
   } | undefined>(undefined)
 
   useEffect(() => {

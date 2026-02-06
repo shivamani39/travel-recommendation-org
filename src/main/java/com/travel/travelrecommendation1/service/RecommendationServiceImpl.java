@@ -77,7 +77,7 @@ public class RecommendationServiceImpl implements RecommendationService {
             }
             // Country match
             if (country != null && !country.isEmpty() && dest.getCountry().equalsIgnoreCase(country)) {
-                score += 2;
+                score += 100;
                 reason.append("In your preferred country. ");
             }
             // Dynamic Pricing & Duration Logic
@@ -103,6 +103,14 @@ public class RecommendationServiceImpl implements RecommendationService {
 
             if (validStart > validEnd) {
                 continue; // No duration overlap
+            }
+
+            // Exact Duration Match Bonus
+            // If we can provide exactly what the user asked for (didn't have to cap it),
+            // give a bonus.
+            if (duration != null && validStart == duration) {
+                score += 1;
+                reason.append("Exact duration match. ");
             }
 
             // Calculate Projected Cost for the valid duration
@@ -200,22 +208,25 @@ public class RecommendationServiceImpl implements RecommendationService {
         }
         // Sort by score descending
         scoredList.sort((a, b) -> Integer.compare(b.score, a.score));
-        // Diversity bonus: encourage other countries in top results
-        java.util.Map<String, Integer> countryCount = new java.util.HashMap<>();
-        for (int i = 0; i < Math.min(limit, scoredList.size()); i++) {
-            String c = scoredList.get(i).country;
-            countryCount.put(c, countryCount.getOrDefault(c, 0) + 1);
-        }
-        for (ScoredDestination sd : scoredList) {
-            if (countryCount.getOrDefault(sd.country, 0) > limit / 2) {
-                // If overrepresented, small bonus to others
-                for (ScoredDestination other : scoredList) {
-                    if (!other.country.equals(sd.country)) {
-                        other.score += 1;
-                        other.reason += " Diversity bonus.";
+        // Diversity bonus: encourage other countries in top results (ONLY if no
+        // specific country requested)
+        if (country == null || country.isEmpty()) {
+            java.util.Map<String, Integer> countryCount = new java.util.HashMap<>();
+            for (int i = 0; i < Math.min(limit, scoredList.size()); i++) {
+                String c = scoredList.get(i).country;
+                countryCount.put(c, countryCount.getOrDefault(c, 0) + 1);
+            }
+            for (ScoredDestination sd : scoredList) {
+                if (countryCount.getOrDefault(sd.country, 0) > limit / 2) {
+                    // If overrepresented, small bonus to others
+                    for (ScoredDestination other : scoredList) {
+                        if (!other.country.equals(sd.country)) {
+                            other.score += 1;
+                            other.reason += " Diversity bonus.";
+                        }
                     }
+                    break;
                 }
-                break;
             }
         }
         // Resort after diversity bonus

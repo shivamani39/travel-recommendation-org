@@ -5,7 +5,7 @@ const EXCHANGE_RATE = 84 // 1 USD = 84 INR
 
 export async function getAllDestinations(): Promise<Destination[]> {
     try {
-        const res = await fetch(`${API_BASE_URL}/destinations`)
+        const res = await fetch(`${API_BASE_URL}/destinations`, { cache: 'no-store' })
         if (!res.ok) throw new Error('Failed to fetch destinations')
         const data = await res.json()
         return data.map((d: any) => mapBackendToFrontend(d))
@@ -19,6 +19,7 @@ export async function getRecommendations(filters: {
     budget: [number, number]
     duration: number
     interests: string[]
+    country?: string // Add country
     limit?: number
 }): Promise<Destination[]> {
     try {
@@ -29,6 +30,7 @@ export async function getRecommendations(filters: {
         const res = await fetch(API_BASE_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            cache: 'no-store',
             body: JSON.stringify({
                 budget: maxBudgetUSD, // Keep for scoring
                 duration: filters.duration, // Keep for scoring
@@ -37,6 +39,7 @@ export async function getRecommendations(filters: {
                 minDuration: filters.duration,
                 maxDuration: filters.duration,
                 interests: filters.interests,
+                country: filters.country, // Add country
                 limit: filters.limit,
             }),
         })

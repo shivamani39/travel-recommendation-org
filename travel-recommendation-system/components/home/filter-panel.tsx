@@ -7,16 +7,26 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Slider } from '@/components/ui/slider'
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+
 interface FilterPanelProps {
   filters: {
     budget: [number, number]
     duration: number
     interests: string[]
+    country?: string // Add country
   }
   onFiltersChange: (filters: {
     budget: [number, number]
     duration: number
     interests: string[]
+    country?: string // Add country
   }) => void
   onSearch: () => void
 }
@@ -28,6 +38,10 @@ const interestOptions = [
   { id: 'adventure', label: 'Adventure', emoji: '🧗' },
   { id: 'food', label: 'Food', emoji: '🍜' },
   { id: 'nature', label: 'Nature', emoji: '🌿' },
+]
+
+const countryOptions = [
+  "Japan", "Italy", "France", "Spain", "USA", "Thailand", "Indonesia", "Australia", "Greece", "Netherlands"
 ]
 
 export default function FilterPanel({ filters, onFiltersChange, onSearch }: FilterPanelProps) {
@@ -53,6 +67,13 @@ export default function FilterPanel({ filters, onFiltersChange, onSearch }: Filt
     onFiltersChange({
       ...filters,
       interests: newInterests,
+    })
+  }
+
+  const handleCountryChange = (value: string) => {
+    onFiltersChange({
+      ...filters,
+      country: value === "all" ? undefined : value,
     })
   }
 
@@ -100,6 +121,24 @@ export default function FilterPanel({ filters, onFiltersChange, onSearch }: Filt
           </div>
         </div>
 
+        {/* Country Filter */}
+        <div className="space-y-3">
+          <label className="text-sm font-semibold text-foreground">Preferred Country (Optional)</label>
+          <Select value={filters.country || "all"} onValueChange={handleCountryChange}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Any Country" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Any Country</SelectItem>
+              {countryOptions.sort().map((country) => (
+                <SelectItem key={country} value={country}>
+                  {country}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Interests Filter */}
         <div className="space-y-3">
           <label className="text-sm font-semibold text-foreground">Interests</label>
@@ -128,3 +167,4 @@ export default function FilterPanel({ filters, onFiltersChange, onSearch }: Filt
     </Card>
   )
 }
+

@@ -13,10 +13,12 @@ export default function Home() {
     budget: [number, number]
     duration: number
     interests: string[]
+    country?: string // Add country
   }>({
     budget: [0, 500000],
     duration: 7,
     interests: [],
+    country: undefined,
   })
   const [destinations, setDestinations] = useState<Destination[]>([])
   const [loading, setLoading] = useState(true)
