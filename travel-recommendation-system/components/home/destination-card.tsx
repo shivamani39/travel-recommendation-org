@@ -69,6 +69,7 @@ export default function DestinationCard({ destination }: DestinationCardProps) {
                 ₹{destination.budgetMin.toLocaleString('en-IN')}
                 {destination.budgetMin !== destination.budgetMax && `–${destination.budgetMax.toLocaleString('en-IN')}`}
               </p>
+              <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">(per person)</p>
             </div>
             <div className="text-center p-2 rounded-lg bg-secondary/5">
               <p className="text-xs text-muted-foreground uppercase font-semibold mb-1">Duration</p>
@@ -90,6 +91,6 @@ export default function DestinationCard({ destination }: DestinationCardProps) {
           </div>
         </div>
       </Card>
-    </Link>
+    </Link >
   )
 }

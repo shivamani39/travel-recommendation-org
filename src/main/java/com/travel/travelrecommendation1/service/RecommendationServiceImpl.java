@@ -63,18 +63,8 @@ public class RecommendationServiceImpl implements RecommendationService {
         for (Destination dest : allDestinations) {
             int score = 0;
             StringBuilder reason = new StringBuilder();
-            // Budget match: User's max budget must be enough for at least the min cost of
-            // the trip
-            if (budget >= dest.getMinBudget()) {
-                score += 3;
-                reason.append("Fits your budget. ");
-            } else {
-                // Penalty only if budget is too low
-                int penalty = (int) Math.round((dest.getMinBudget() - budget) * 1.0 / 100);
-                score -= penalty;
-                if (penalty > 0)
-                    reason.append("Over budget. ");
-            }
+            // Old budget match logic removed - moving to post-calculation
+
             // Duration match: User's max duration must be enough for at least the min
             // duration of the trip
             if (duration >= dest.getMinDuration()) {
@@ -102,7 +92,12 @@ public class RecommendationServiceImpl implements RecommendationService {
             int userMaxDur = (maxDuration != null) ? maxDuration : Integer.MAX_VALUE;
 
             // Intersection of [userMin, userMax] and [destMin, destMax]
-            int validStart = Math.max(userMinDur, dest.getMinDuration());
+
+            // FIX: If specific duration requested, prioritize it
+            int targetDuration = (duration != null) ? duration : dest.getMinDuration();
+
+            // Use targetDuration as the starting point, but clamp to destination limits
+            int validStart = Math.max(targetDuration, dest.getMinDuration());
             int validEnd = Math.min(userMaxDur, dest.getMaxDuration());
 
             if (validStart > validEnd) {
@@ -127,9 +122,7 @@ public class RecommendationServiceImpl implements RecommendationService {
             // User: 500-1000. Project: 200.
             // Let's assume user accepts cheaper options. But usually filters are ranges.
             // If I say "Budget 500-1000", I assume min 500.
-            if (maxProjectedCost < userMinBud) {
-                continue; // Too cheap (below user's minimum spend preference)
-            }
+            // Strict filter for 'too cheap' removed to allow +1 scoring logic to work.
 
             // Valid!
             int displayPrice = projectedCost;
@@ -142,21 +135,23 @@ public class RecommendationServiceImpl implements RecommendationService {
             // If validEnd >= 13, then we can suggest a trip of 13 days costing 520.
             // Then effective price = 520.
             // Let's check this "Upsell" logic?
-            if (displayPrice < userMinBud) {
-                int daysNeeded = (int) Math.ceil((double) userMinBud / dailyRate);
-                if (daysNeeded <= validEnd) {
-                    displayPrice = (int) (dailyRate * daysNeeded);
-                    // Update validStart to reflect the days needed for this price
-                    validStart = daysNeeded;
-                } else {
-                    // Even max duration is too cheap. But wait, maxProjectedCost >= userMinBud
-                    // check passed earlier?
-                    // No, I added the check above. So maxProjectedCost >= userMinBud.
-                    // So daysNeeded MUST be <= validEnd.
-                    // So this block IS reachable and correct.
-                    displayPrice = (int) (dailyRate * daysNeeded);
-                    validStart = daysNeeded;
-                }
+            // Upsell logic removed. We now strictly respect the requested duration.
+            // If the price is below User's Min Budget, it will be caught by the +1 Scoring
+            // Logic below.
+
+            // New Budget Scoring Logic (Range-Aware)
+            // userMinBud and userMaxBud are already defined above (lines 116-117)
+            if (displayPrice > userMaxBud) {
+                score -= 2;
+                reason.append("Over budget. ");
+            } else if (displayPrice >= userMinBud) {
+                // In range [min, max] -> Perfect match
+                score += 3;
+                reason.append("Fits your budget range. ");
+            } else {
+                // Below min -> Acceptable but maybe too cheap
+                score += 1;
+                reason.append("Under budget. ");
             }
 
             // Create a COPY of the destination to modify displayed values

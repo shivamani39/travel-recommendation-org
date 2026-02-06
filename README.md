@@ -1,6 +1,6 @@
 # TripFactory - Travel Recommendation System
 
-TripFactory is a full-stack personalized travel recommendation application that helps users discover their next perfect destination based on budget, duration, and interests.
+TripFactory-Travel Recommendation System is a full-stack personalized travel recommendation application that helps users discover their next perfect destination based on budget, duration, and interests.
 
 ## 🚀 Features
 
@@ -28,17 +28,13 @@ TripFactory is a full-stack personalized travel recommendation application that 
 - Java JDK 17+
 - Maven (optional, `mvnw` wrapper included)
 
-### Installation
-
-1.  **Clone the repository**
-    ```bash
-    git clone https://github.com/yourusername/tripfactory.git
-    cd travel-recommendation-mvp
+    git clone https://github.com/shivamani39/travel-recommendation-org
+    cd travel-recommendation-org
     ```
 
 2.  **Start the Backend Server**
     The backend runs on port `8080`.
-    ```bash
+    
     ./mvnw spring-boot:run
     ```
 
