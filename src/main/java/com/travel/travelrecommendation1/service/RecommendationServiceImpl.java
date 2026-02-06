@@ -41,10 +41,8 @@ public class RecommendationServiceImpl implements RecommendationService {
         Integer limit = request.getLimit() != null ? request.getLimit() : 10;
 
         // Count interest priorities (repeats = higher priority)
-        java.util.Map<String, Integer> interestPriority = new java.util.HashMap<>();
-        for (String interest : userInterests) {
-            interestPriority.put(interest, interestPriority.getOrDefault(interest, 0) + 1);
-        }
+        // Interest priority logic removed - User interface only supports single
+        // selection.
 
         class ScoredDestination {
             Destination destination;
@@ -96,8 +94,11 @@ public class RecommendationServiceImpl implements RecommendationService {
             // FIX: If specific duration requested, prioritize it
             int targetDuration = (duration != null) ? duration : dest.getMinDuration();
 
-            // Use targetDuration as the starting point, but clamp to destination limits
+            // Use targetDuration as the starting point
+            // Logic Update: We CAP the duration at the destination's Max.
+            // e.g. Request 7 days. Dest Max 5 days -> We set validStart = 5.
             int validStart = Math.max(targetDuration, dest.getMinDuration());
+            validStart = Math.min(validStart, dest.getMaxDuration()); // Apply Cap
             int validEnd = Math.min(userMaxDur, dest.getMaxDuration());
 
             if (validStart > validEnd) {
@@ -181,9 +182,9 @@ public class RecommendationServiceImpl implements RecommendationService {
             int interestScore = 0;
             for (String interest : userInterests) {
                 if (destInterests.contains(interest)) {
-                    int priority = interestPriority.getOrDefault(interest, 1);
-                    interestScore += 2 * priority;
-                    interestMatches += priority;
+                    // Simple Match: +2 Points
+                    interestScore += 2;
+                    interestMatches++;
                 }
             }
             score += interestScore;
